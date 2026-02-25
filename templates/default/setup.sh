@@ -6,7 +6,7 @@ APP_NAME="${1:-$(basename "$PWD" | tr '-' '_')}"
 
 echo "Creating Phoenix project: $APP_NAME"
 mix archive.install hex phx_new --force
-mix phx.new "$APP_NAME"
+mix phx.new "$APP_NAME" --no-install
 
 # Move generated files up to project root
 shopt -s dotglob
