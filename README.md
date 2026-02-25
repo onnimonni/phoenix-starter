@@ -8,7 +8,7 @@ Batteries-included Elixir dev environment with [devenv](https://devenv.sh), [Exp
 mkdir my_app && cd my_app
 nix flake init -t github:onnimonni/phoenix-starter
 devenv shell
-./setup.sh my_app
+bash setup.sh my_app
 ```
 
 ## Adding to Existing Project
