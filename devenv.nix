@@ -6,6 +6,7 @@ in
 {
   packages = [
     pkgs.git
+    pkgs.jq
     inputs.expert.packages.${pkgs.stdenv.system}.default
   ];
 
@@ -15,8 +16,45 @@ in
     lsp.enable = false; # Expert LSP added via packages
   };
 
+  services.postgres = {
+    enable = true;
+    listen_addresses = "127.0.0.1";
+    initialDatabases = [{ name = "app_dev"; } { name = "app_test"; }];
+  };
+
   enterShell = ''
     elixir --version
+
+    # FIXME: Move worktree hooks into claude.code.hooks once devenv supports
+    # WorktreeCreate/WorktreeRemove hookTypes, then delete .claude/hooks/ scripts
+    # and this enterShell block. PR: https://github.com/cachix/devenv/pull/2523
+    mkdir -p .claude
+    cat > .claude/settings.local.json <<SETTINGS
+    {
+      "hooks": {
+        "WorktreeCreate": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "$DEVENV_ROOT/.claude/hooks/worktree-create.sh"
+              }
+            ]
+          }
+        ],
+        "WorktreeRemove": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "$DEVENV_ROOT/.claude/hooks/worktree-remove.sh"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    SETTINGS
   '';
 
   # Git pre-commit hooks
@@ -262,6 +300,7 @@ in
         fi
       '';
     };
+
   };
 
   claude.code.commands = {

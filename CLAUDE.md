@@ -24,6 +24,7 @@ Invoke the matching skill BEFORE exploring or writing code:
 
 ## Architecture Principles
 
+- **Use red/green TTD**
 - **Contexts as boundaries**: group related operations, cross-reference by ID not association
 - **Thin LiveViews**: business logic in contexts, LiveViews only handle UI state
 - **Pattern matching over conditionals**: use function heads, case, with -- never nested if/else
