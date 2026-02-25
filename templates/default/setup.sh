@@ -1,34 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Default to directory name (hyphens → underscores for Elixir compatibility)
+# Default to directory name (hyphens -> underscores for Elixir compatibility)
 APP_NAME="${1:-$(basename "$PWD" | tr '-' '_')}"
 
 echo "Creating Phoenix project: $APP_NAME"
 mix archive.install hex phx_new --force
-mix phx.new "$APP_NAME" --install
+mix phx.new "$APP_NAME"
 
 # Move generated files up to project root
 shopt -s dotglob
 mv "$APP_NAME"/* .
 rmdir "$APP_NAME"
 
-# Inject credo and sobelow into mix.exs deps
-sd -F '{:phoenix,' '{:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
-      {:phoenix,' mix.exs
-
-# Patch Ecto config for devenv (env vars, no password, 127.0.0.1)
-for config_file in config/dev.exs config/test.exs; do
-  sd -F 'username: "postgres"' 'username: System.get_env("USER", "postgres")' "$config_file"
-  sd -F 'password: "postgres",' '' "$config_file"
-  sd -F 'hostname: "localhost"' 'hostname: "127.0.0.1"' "$config_file"
-done
-sd -F "database: \"${APP_NAME}_dev\"" 'database: System.get_env("DATABASE_DEV", "app_dev")' config/dev.exs
-sd -F "database: \"${APP_NAME}_test\"" 'database: System.get_env("DATABASE_TEST", "app_test")' config/test.exs
-
-# Fetch new dependencies
+# Bootstrap igniter into the project (simple string injection, no deps needed)
+elixir "$PHOENIX_STARTER_PATH/scripts/add_igniter.exs"
 mix deps.get
+
+# Use Igniter to add dev deps (credo, sobelow) and patch Ecto config for devenv
+mkdir -p lib/mix/tasks
+cp "$PHOENIX_STARTER_PATH/scripts/configure_devenv.ex" lib/mix/tasks/
+mix configure_devenv --yes
+rm lib/mix/tasks/configure_devenv.ex
+
+mix deps.get
+mix format
 
 # Self-remove (one-time script)
 rm -f setup.sh

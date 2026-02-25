@@ -8,7 +8,6 @@ in
   packages = [
     pkgs.git
     pkgs.jq
-    pkgs.sd
     inputs.expert.packages.${pkgs.stdenv.system}.default
   ];
 

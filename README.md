@@ -39,12 +39,26 @@ Scaffolds a new Phoenix project inside the current directory:
 ./setup.sh my_app
 ```
 
-This runs `mix phx.new`, moves files to project root, injects `credo` + `sobelow` deps, and fetches dependencies.
+This runs `mix phx.new`, moves files to project root, then:
+
+1. **Bootstraps Igniter** -- injects `{:igniter, "~> 0.5"}` into mix.exs via simple string replacement (`scripts/add_igniter.exs`)
+2. **Runs Igniter task** -- adds `credo` + `sobelow` deps and patches Ecto config for devenv (`scripts/configure_devenv.ex`)
+3. **Formats** -- `mix format` for consistent output
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/add_igniter.exs` | Injects `{:igniter}` dep into mix.exs (no dependencies, plain string replacement) |
+| `scripts/configure_devenv.ex` | Igniter Mix task: adds credo/sobelow deps + patches Ecto config (env vars, `127.0.0.1`) |
+
+The Igniter task is copied into `lib/mix/tasks/` temporarily, run with `mix configure_devenv --yes`, then deleted. Igniter stays as a permanent dev dep for future use (`mix igniter.add`, code generation, etc).
 
 ## What's Included
 
 - **Elixir 1.20-rc** (OTP 28) via devenv
 - **Expert LSP** -- official Elixir language server
+- **Igniter** -- AST-aware code generation and project configuration
 - **Git pre-commit hooks** -- mix format, compile warnings-as-errors, credo strict, sobelow
 - **Claude Code hooks** -- auto-format, compile, credo, sobelow (PostToolUse) + skill reminder (PreToolUse)
 - **Custom Credo checks** -- 5 AST-based checks (missing @impl, hardcoded config, deprecated patterns, string concat, auto-upload)
@@ -60,6 +74,7 @@ This runs `mix phx.new`, moves files to project root, injects `credo` + `sobelow
 | Skills (`.claude/skills/`) | Overwritten on shell entry | Yes, on `devenv update` |
 | Worktree hooks (`.claude/hooks/`) | Overwritten on shell entry | Yes, on `devenv update` |
 | Credo checks (`credo_checks/`) | Referenced via `PHOENIX_STARTER_PATH` | Yes, on `devenv update` |
+| Setup scripts (`scripts/`) | Referenced via `PHOENIX_STARTER_PATH` | Yes, on `devenv update` |
 | `.credo.exs` | Consumer-owned (from template) | No, customize freely |
 | `CLAUDE.md` | Consumer-owned (from template) | No, customize freely |
 
@@ -75,15 +90,16 @@ devenv up -d     # background
 psql -h 127.0.0.1 app_dev
 ```
 
-Configure Ecto:
+Ecto config is auto-patched by `setup.sh` via Igniter:
 
 ```elixir
-# config/dev.exs
+# config/dev.exs (after setup)
 config :my_app, MyApp.Repo,
-  username: System.get_env("USER"),
-  database: System.get_env("DATABASE_DEV", "app_dev"),
+  username: System.get_env("USER", "postgres"),
+  password: "postgres",
   hostname: "127.0.0.1",
-  pool_size: 10
+  database: System.get_env("DATABASE_DEV", "app_dev"),
+  ...
 ```
 
 ### Worktree Database Isolation
