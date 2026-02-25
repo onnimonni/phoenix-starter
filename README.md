@@ -5,10 +5,18 @@ Batteries-included Elixir dev environment with [devenv](https://devenv.sh), [Exp
 ## Quick Start
 
 ```sh
+nix run github:onnimonni/phoenix-starter -- my_app && cd my_app
+```
+
+This creates the directory, builds the devenv environment, scaffolds Phoenix, adds deps, and patches config. First run takes a few minutes.
+
+Alternatively, using `nix flake init` (manual setup):
+
+```sh
 mkdir my_app && cd my_app
 nix flake init -t github:onnimonni/phoenix-starter
-devenv shell
-bash setup.sh my_app
+devenv shell -- bash setup.sh
+direnv allow
 ```
 
 ## Adding to Existing Project

@@ -7,9 +7,4 @@
   # Override database names
   # services.postgres.initialDatabases = [{ name = "myapp_dev"; } { name = "myapp_test"; }];
 
-  enterShell = ''
-    if [ ! -f mix.exs ] && [ -f setup.sh ]; then
-      bash setup.sh
-    fi
-  '';
 }
