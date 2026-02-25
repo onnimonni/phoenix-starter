@@ -21,7 +21,7 @@ mix deps.get
 mkdir -p lib/mix/tasks
 cp "$PHOENIX_STARTER_PATH/scripts/configure_devenv.ex" lib/mix/tasks/
 mix configure_devenv --yes
-rm lib/mix/tasks/configure_devenv.ex
+rm -f lib/mix/tasks/configure_devenv.ex
 
 mix deps.get
 mix format
