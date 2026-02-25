@@ -1,0 +1,24 @@
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+# Elixir
+_build/
+deps/
+*.beam
+*.ez
+.elixir_ls/
+
+# Claude Code (devenv-generated symlinks + local settings)
+.claude/settings.json
+.claude/settings.local.json
+.claude/commands/
+.claude/agents/
+.mcp.json
