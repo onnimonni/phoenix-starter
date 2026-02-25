@@ -15,6 +15,10 @@ in
   # Upstream credo checks path for consumer .credo.exs
   env.PHOENIX_STARTER_PATH = builtins.toString src;
 
+  # Default database names (overridden per-worktree via .claude/settings.local.json)
+  env.DATABASE_DEV = "app_dev";
+  env.DATABASE_TEST = "app_test";
+
   languages.elixir = {
     enable = true;
     package = beamPkgs.elixir_1_20;

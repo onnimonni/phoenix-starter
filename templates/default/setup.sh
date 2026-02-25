@@ -18,6 +18,15 @@ sd -F '{:phoenix,' '{:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:phoenix,' mix.exs
 
+# Patch Ecto config for devenv (env vars, no password, 127.0.0.1)
+for config_file in config/dev.exs config/test.exs; do
+  sd -F 'username: "postgres"' 'username: System.get_env("USER", "postgres")' "$config_file"
+  sd -F 'password: "postgres",' '' "$config_file"
+  sd -F 'hostname: "localhost"' 'hostname: "127.0.0.1"' "$config_file"
+done
+sd -F "database: \"${APP_NAME}_dev\"" 'database: System.get_env("DATABASE_DEV", "app_dev")' config/dev.exs
+sd -F "database: \"${APP_NAME}_test\"" 'database: System.get_env("DATABASE_TEST", "app_test")' config/test.exs
+
 # Fetch new dependencies
 mix deps.get
 

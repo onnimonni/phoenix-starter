@@ -23,7 +23,18 @@ for base in app_dev app_test; do
   echo "Cloned $base -> $clone_db" >&2
 done
 
-# Write worktree-local env override so Ecto uses the cloned DBs
+# Set worktree-local env vars for Claude Code (Ecto reads these)
+mkdir -p "$wt_dir/.claude"
+cat > "$wt_dir/.claude/settings.local.json" <<EOF
+{
+  "env": {
+    "DATABASE_DEV": "app_dev_${db_suffix}",
+    "DATABASE_TEST": "app_test_${db_suffix}"
+  }
+}
+EOF
+
+# Also write .env.worktree for manual shell use (source .env.worktree)
 cat > "$wt_dir/.env.worktree" <<EOF
 export DATABASE_DEV=app_dev_${db_suffix}
 export DATABASE_TEST=app_test_${db_suffix}
