@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="${1:?Usage: ./setup.sh my_app}"
+# Default to directory name (hyphens → underscores for Elixir compatibility)
+APP_NAME="${1:-$(basename "$PWD" | tr '-' '_')}"
 
 echo "Creating Phoenix project: $APP_NAME"
 mix archive.install hex phx_new --force
@@ -19,6 +20,9 @@ sd -F '{:phoenix,' '{:credo, "~> 1.7", only: [:dev, :test], runtime: false},
 
 # Fetch new dependencies
 mix deps.get
+
+# Self-remove (one-time script)
+rm -f setup.sh
 
 echo ""
 echo "Done! Next steps:"
