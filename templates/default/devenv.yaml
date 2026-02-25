@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  expert:
+    url: github:elixir-lang/expert
+  phoenix-starter:
+    url: github:onnimonni/phoenix-starter
+    flake: false
+
+imports:
+  - phoenix-starter

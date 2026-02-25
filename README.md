@@ -1,63 +1,81 @@
-# Elixir Devenv + Claude Code Template
+# Phoenix + Claude Code Devenv Template
 
 Batteries-included Elixir dev environment with [devenv](https://devenv.sh), [Expert LSP](https://github.com/elixir-lang/expert), and Claude Code integration.
 
-One command: `devenv shell` -- and you're ready.
+## Quick Start
+
+```sh
+mkdir my_app && cd my_app
+nix flake init -t github:onnimonni/phoenix-starter
+devenv shell
+./setup.sh my_app
+```
+
+## Adding to Existing Project
+
+Add to your `devenv.yaml`:
+
+```yaml
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+  expert:
+    url: github:elixir-lang/expert
+  phoenix-starter:
+    url: github:onnimonni/phoenix-starter
+    flake: false
+
+imports:
+  - phoenix-starter
+```
+
+Copy `.credo.exs` from [`templates/default/.credo.exs`](templates/default/.credo.exs) to your project root. It references upstream credo checks via `PHOENIX_STARTER_PATH` env var (auto-set by the module).
+
+## setup.sh
+
+Scaffolds a new Phoenix project inside the current directory:
+
+```sh
+./setup.sh my_app
+```
+
+This runs `mix phx.new`, moves files to project root, injects `credo` + `sobelow` deps, and fetches dependencies.
 
 ## What's Included
 
 - **Elixir 1.20-rc** (OTP 28) via devenv
 - **Expert LSP** -- official Elixir language server
-- **Git pre-commit hooks** -- mix format, compile warnings-as-errors, credo strict
-- **Claude Code hooks** -- 3 PostToolUse (auto-format, compile, credo) + 10 PreToolUse (lint guards) + worktree DB cloning
-- **Claude Code slash commands** -- `/test`, `/format`, `/credo`
-- **PostgreSQL** -- auto-managed by devenv (dev + test databases)
+- **Git pre-commit hooks** -- mix format, compile warnings-as-errors, credo strict, sobelow
+- **Claude Code hooks** -- auto-format, compile, credo, sobelow (PostToolUse) + skill reminder (PreToolUse)
+- **Custom Credo checks** -- 5 AST-based checks (missing @impl, hardcoded config, deprecated patterns, string concat, auto-upload)
+- **Claude Code slash commands** -- `/test`, `/format`, `/credo`, `/sobelow`
+- **PostgreSQL** -- auto-managed with dev + test databases
 - **7 Elixir skills** -- elixir, phoenix-liveview, ecto, otp, oban, phoenix-uploads, testing
+- **Worktree DB isolation** -- automatic database cloning for Claude Code worktrees
 
-## Setup
+## How Updates Work
 
-1. Install [devenv](https://devenv.sh/getting-started/)
-2. Clone this repo
-3. Run `devenv shell`
-4. Start building
+| Resource | Method | Auto-updates? |
+|----------|--------|---------------|
+| Skills (`.claude/skills/`) | Overwritten on shell entry | Yes, on `devenv update` |
+| Worktree hooks (`.claude/hooks/`) | Overwritten on shell entry | Yes, on `devenv update` |
+| Credo checks (`credo_checks/`) | Referenced via `PHOENIX_STARTER_PATH` | Yes, on `devenv update` |
+| `.credo.exs` | Consumer-owned (from template) | No, customize freely |
+| `CLAUDE.md` | Consumer-owned (from template) | No, customize freely |
+
+Update upstream: `devenv update phoenix-starter`
 
 ## PostgreSQL
 
-PostgreSQL starts automatically with `devenv up`. Two databases are pre-created: `app_dev` and `app_test`.
+PostgreSQL starts with `devenv up`. Two databases are pre-created: `app_dev` and `app_test`.
 
 ```sh
-# Start all services (postgres) in foreground
-devenv up
-
-# Or run in background
-devenv up -d
-
-# Connect
+devenv up        # foreground
+devenv up -d     # background
 psql -h 127.0.0.1 app_dev
 ```
 
-Data is stored in `.devenv/state/postgres/`. Configure your Ecto repo:
-
-```elixir
-# config/dev.exs
-config :my_app, MyApp.Repo,
-  username: System.get_env("USER"),
-  database: "app_dev",
-  hostname: "127.0.0.1",
-  pool_size: 10
-```
-
-### Worktree Database Isolation
-
-When Claude Code creates a worktree (`--worktree` flag or `isolation: "worktree"` in subagents), the WorktreeCreate hook automatically:
-
-1. Creates a git worktree at `.claude/worktrees/<name>`
-2. Clones `app_dev` and `app_test` databases using PostgreSQL `TEMPLATE` (instant, copy-on-write)
-3. Writes `.env.worktree` with `DATABASE_DEV` and `DATABASE_TEST` env vars
-
-When the worktree is removed, the cloned databases are dropped automatically.
-
-To use the cloned DBs in your Ecto config:
+Configure Ecto:
 
 ```elixir
 # config/dev.exs
@@ -68,26 +86,9 @@ config :my_app, MyApp.Repo,
   pool_size: 10
 ```
 
-## Usage in Your Project
+### Worktree Database Isolation
 
-Copy this template into your Elixir project root. The `devenv.nix` declares everything -- packages, hooks, Claude Code integration. Skills live in `.claude/skills/`.
-
-When you enter `devenv shell`, devenv auto-generates:
-- `.claude/settings.json` -- hook configuration
-- `.claude/commands/` -- slash commands
-- Git pre-commit hooks
-
-## Skills
-
-| Skill | When to Use |
-|-------|-------------|
-| `elixir` | Any .ex/.exs file, core Elixir patterns |
-| `phoenix-liveview` | LiveView, components, PubSub, .heex |
-| `ecto` | Schemas, changesets, queries, migrations |
-| `otp` | GenServer, Supervisor, Task, ETS |
-| `oban` | Background jobs, workflows |
-| `phoenix-uploads` | File uploads in LiveView |
-| `testing` | ExUnit tests, fixtures, assertions |
+When Claude Code creates a worktree, the hook automatically clones `app_dev` and `app_test` using PostgreSQL `TEMPLATE` (instant, copy-on-write) and writes `.env.worktree` with `DATABASE_DEV` and `DATABASE_TEST` env vars. Databases are dropped when the worktree is removed.
 
 ## Credits
 
