@@ -59,16 +59,17 @@
               mix configure_devenv --yes >/dev/null 2>&1
               rm -f lib/mix/tasks/configure_devenv.ex
 
+              mix deps.get >/dev/null 2>&1
               mix format >/dev/null 2>&1
               step_done 'Configured for devenv'
 
               git add .
               git commit --no-gpg-sign --quiet -m 'Init Phoenix project'
               step_done 'Initial commit'
-            ") 2>/dev/null || true
+            ") 2>/dev/null
 
             if [ ! -f "$name/mix.exs" ]; then
-              echo "error: setup failed" >&2
+              echo "error: setup failed — check output above" >&2
               exit 1
             fi
 
