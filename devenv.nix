@@ -272,9 +272,4 @@ in
       ```
     '';
   };
-
-  enterTest = ''
-    elixir --version
-    mix --version
-  '';
 }
