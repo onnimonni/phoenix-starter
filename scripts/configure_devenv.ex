@@ -1,5 +1,5 @@
 # Igniter Mix task to configure a fresh Phoenix project for devenv.
-# Adds dev deps (credo, sobelow) and patches Ecto config (env vars, 127.0.0.1).
+# Patches Ecto config (env vars, 127.0.0.1) and asset tool paths.
 # Copied into project temporarily, run as: mix configure_devenv --yes
 
 defmodule Mix.Tasks.ConfigureDevenv do
@@ -23,16 +23,9 @@ defmodule Mix.Tasks.ConfigureDevenv do
       |> then(&Module.concat([&1, "Repo"]))
 
     igniter
-    |> add_deps()
     |> configure_repo("dev.exs", app, repo, "DATABASE_DEV", "app_dev")
     |> configure_repo("test.exs", app, repo, "DATABASE_TEST", "app_test")
     |> configure_asset_tools()
-  end
-
-  defp add_deps(igniter) do
-    igniter
-    |> Igniter.Project.Deps.add_dep({:credo, "~> 1.7", only: [:dev, :test], runtime: false})
-    |> Igniter.Project.Deps.add_dep({:sobelow, "~> 0.13", only: [:dev, :test], runtime: false})
   end
 
   defp configure_repo(igniter, file, app, repo, db_env, db_default) do
