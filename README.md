@@ -4,20 +4,15 @@ Batteries-included Elixir dev environment with [devenv](https://devenv.sh), [Exp
 
 ## Quick Start
 
-```sh
-nix run github:onnimonni/phoenix-starter -- my_app && cd my_app
-```
-
-This creates the directory, builds the devenv environment, scaffolds Phoenix, adds deps, and patches config. First run takes a few minutes.
-
-Alternatively, using `nix flake init` (manual setup):
+Prerequisites: [nix](https://nixos.org/download) and [devenv](https://devenv.sh/getting-started/)
 
 ```sh
-mkdir my_app && cd my_app
-nix flake init -t github:onnimonni/phoenix-starter
-devenv shell -- bash setup.sh
-direnv allow
+nix run github:onnimonni/phoenix-starter -- my_app
+cd my_app
+devenv up  # starts postgres + phoenix on http://localhost:4000
 ```
+
+The installer scaffolds Phoenix, injects deps (igniter, credo, sobelow), patches Ecto config, and runs `mix ecto.setup`. First run takes a few minutes.
 
 ## Adding to Existing Project
 
@@ -39,26 +34,13 @@ imports:
 
 Copy `.credo.exs` from [`templates/default/.credo.exs`](templates/default/.credo.exs) to your project root. It references upstream credo checks via `PHOENIX_STARTER_PATH` env var (auto-set by the module).
 
-## setup.sh
+## How Setup Works
 
-Scaffolds a new Phoenix project inside the current directory:
+The `nix run` installer runs `mix phx.new`, moves files to project root, then:
 
-```sh
-./setup.sh my_app
-```
-
-This runs `mix phx.new`, moves files to project root, then:
-
-1. **Bootstraps Igniter** -- injects `{:igniter, "~> 0.5"}` into mix.exs via simple string replacement (`scripts/add_igniter.exs`)
-2. **Runs Igniter task** -- adds `credo` + `sobelow` deps and patches Ecto config for devenv (`scripts/configure_devenv.ex`)
+1. **Bootstraps Igniter** -- injects `{:igniter, "~> 0.5"}` into mix.exs via string replacement ([`scripts/add_igniter.exs`](scripts/add_igniter.exs))
+2. **Runs Igniter task** -- adds credo + sobelow deps, patches Ecto config for devenv ([`scripts/configure_devenv.ex`](scripts/configure_devenv.ex))
 3. **Formats** -- `mix format` for consistent output
-
-## Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/add_igniter.exs` | Injects `{:igniter}` dep into mix.exs (no dependencies, plain string replacement) |
-| `scripts/configure_devenv.ex` | Igniter Mix task: adds credo/sobelow deps + patches Ecto config (env vars, `127.0.0.1`) |
 
 The Igniter task is copied into `lib/mix/tasks/` temporarily, run with `mix configure_devenv --yes`, then deleted. Igniter stays as a permanent dev dep for future use (`mix igniter.add`, code generation, etc).
 
@@ -90,15 +72,15 @@ Update upstream: `devenv update phoenix-starter`
 
 ## PostgreSQL
 
-PostgreSQL starts with `devenv up`. Two databases are pre-created: `app_dev` and `app_test`.
+`devenv up` starts both PostgreSQL and Phoenix (`mix phx.server`). Two databases are pre-created: `app_dev` and `app_test`.
 
 ```sh
-devenv up        # foreground
+devenv up        # foreground (postgres + phoenix)
 devenv up -d     # background
 psql -h 127.0.0.1 app_dev
 ```
 
-Ecto config is auto-patched by `setup.sh` via Igniter:
+Ecto config is auto-patched during setup via Igniter:
 
 ```elixir
 # config/dev.exs (after setup)

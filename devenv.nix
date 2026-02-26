@@ -8,6 +8,8 @@ in
   packages = [
     pkgs.git
     pkgs.jq
+    pkgs.esbuild
+    pkgs.tailwindcss_4
     inputs.expert.packages.${pkgs.stdenv.system}.default
   ];
 
@@ -17,6 +19,12 @@ in
   # Default database names (overridden per-worktree via .claude/settings.local.json)
   env.DATABASE_DEV = "app_dev";
   env.DATABASE_TEST = "app_test";
+
+  # Nix-provided asset tool binaries (skip Mix download)
+  env.ESBUILD_BINARY_PATH = "${pkgs.esbuild}/bin/esbuild";
+  env.ESBUILD_VERSION = pkgs.esbuild.version;
+  env.TAILWIND_BINARY_PATH = "${pkgs.tailwindcss_4}/bin/tailwindcss";
+  env.TAILWIND_VERSION = pkgs.tailwindcss_4.version;
 
   languages.elixir = {
     enable = true;
@@ -30,9 +38,12 @@ in
     initialDatabases = [{ name = "app_dev"; } { name = "app_test"; }];
   };
 
-  enterShell = ''
-    elixir --version
+  processes.phoenix = {
+    exec = "mix phx.server";
+    after = [ "devenv:processes:postgres" ];
+  };
 
+  enterShell = ''
     # Distribute upstream skills and hooks to consumer project
     mkdir -p .claude/skills .claude/hooks
     cp -r ${src}/.claude/skills/* .claude/skills/ 2>/dev/null || true
