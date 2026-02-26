@@ -92,9 +92,8 @@
             fi
 
             echo ""
-            echo "Done! Next:"
-            echo "  cd $name"
-            echo "  devenv up    # starts postgres + phoenix on http://localhost:4000"
+            echo "Everything ready. Start developing your app:"
+            echo "  cd $name && devenv up"
           '';
         };
       });
